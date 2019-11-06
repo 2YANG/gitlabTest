@@ -1,0 +1,59 @@
+#!/bin/bash
+#pre-receive script
+#set -x #for debugging
+
+validate_ref()
+{
+    # --- Arguments
+    oldrev=$(git rev-parse $1)
+    newrev=$(git rev-parse $2)
+    refname="$3"
+
+    commitList=`git rev-list $oldrev..$newrev`
+        #echo $commitList
+    split=($commitList)
+    for s in ${split[@]}
+    do
+        echo "@@@@@@@"
+        echo "$s"
+        msg=`git cat-file commit $s | sed '1,/^$/d'`
+        echo $msg
+        maxLength=50
+        length=${#msg}
+        pattern='^(feat|fix|test|refactor|docs|style|chroe)(\(.*\))?:[[:space:]](.+)$'
+
+        if [[ $msg =~ $pattern ]]; then
+            if [[ $length -gt $maxLength ]]; then
+                echo -e "\033[31m Error: the msg over max length \033[m"
+                exit 1
+            fi
+            echo -e "\033[32m commit success! \033[0m"
+        else
+            echo -e "\033[31m Error: the commit message is irregular \033[m"
+        	echo -e "\033[31m Error: type must be one of [feat,fix,hotfix,docs,style,refactor,test,chore] \033[m"
+            echo -e "\033[31m eg: feat(user): add the user login \033[m"
+            exit 1
+        fi
+    done
+
+}
+
+fail=""
+
+# Allow dual mode: run from the command line just like the update hook, or
+# if no arguments are given then run as a hook script
+if [ -n "$1" -a -n "$2" -a -n "$3" ]; then
+    # Output to the terminal in command line mode - if someone wanted to
+    # resend an email; they could redirect the output to sendmail
+    # themselves
+    PAGER= validate_ref $2 $3 $1
+else
+    while read oldrev newrev refname
+    do
+        validate_ref $oldrev $newrev $refname
+    done
+fi
+
+if [ -n "$fail" ]; then
+    exit $fail
+fi
