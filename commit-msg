@@ -1,11 +1,18 @@
 #!/bin/sh
 MSG=`awk '{printf("%s",$0)}' $1`
+
+mergePattern='^Merge '
+if [[ $msg =~ $mergeCommitPattern ]]; then
+    echo -e "\033[32m skip the merge, commit success! \033[0m"
+    exit 0
+fi
+
 if [[ $MSG =~ ^(feat|fix|test|refactor|docs|style|chroe)(\(.*\))?:[[:space:]](.+)$ ]]
 then
-	echo -e "\033[32m commit success! \033[0m"
+    echo -e "\033[32m commit success! \033[0m"
 else
     echo -e "\033[31m Error: the commit message is irregular \033[m"
-	echo -e "\033[31m Error: type must be one of [feat,fix,docs,style,refactor,test,chore] \033[m"
+    echo -e "\033[31m Error: type must be one of [feat,fix,docs,style,refactor,test,chore] \033[m"
     echo -e "\033[31m eg: feat(user): add the user login \033[m"
-	exit 1
+    exit 1
 fi
