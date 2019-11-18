@@ -18,6 +18,13 @@ validate_ref()
         echo "$s"
         msg=`git cat-file commit $s | sed '1,/^$/d'`
         echo $msg
+        
+        mergePattern='^Merge '
+        if [[ $msg =~ $mergeCommitPattern ]]; then
+            echo -e "\033[32m skip the merge, commit success! \033[0m"
+            continue
+        fi
+        
         maxLength=50
         length=${#msg}
         pattern='^(feat|fix|test|refactor|docs|style|chroe)(\(.*\))?:[[:space:]](.+)$'
